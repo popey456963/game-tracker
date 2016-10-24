@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Socket.IO chat</title>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font: 13px Helvetica, Arial; }
+      form { background: #000; padding: 3px; position: fixed; bottom: 0; width: 100%; }
+      form input { border: 0; padding: 10px; width: 90%; margin-right: .5%; }
+      form button { width: 9%; background: rgb(130, 224, 255); border: none; padding: 10px; }
+      #messages { list-style-type: none; margin: 0; padding: 0; }
+      #messages li { padding: 5px 10px; }
+      #messages li:nth-child(odd) { background: #eee; }
+    </style>
+  </head>
+  <body>
+
+    <div id="chartContainer" style="height: 300px; width: 100%;"></div>
+
+    <ul id="messages"></ul>
+    <form action="">
+      <input id="m" autocomplete="off" /><button>Send</button>
+    </form>
+
+
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+    <script src='/js/canvasjs.min.js'></script>
+    <script>
+      var chart = "";
+      var latestData = {};
+      var socket = io();
+      socket.on('initial data', function(data){
+        for (var i in data) {
+          latestData[i] = []
+          for (var j = 0; j < data[i].length; j++) {
+            latestData[i].push({x: new Date(data[i][j].x), y: data[i][j].y})
+          }
+        }
+        chart = new CanvasJS.Chart("chartContainer",{
+          zoomEnabled: true,
+          title: {
+            text: "Server Population"    
+          },
+          toolTip: {
+            shared: true
+          },
+          legend: {
+            verticalAlign: "top",
+            horizontalAlign: "center",
+            fontSize: 14,
+            fontWeight: "bold",
+            fontFamily: "calibri",
+            fontColor: "dimGrey"
+          },
+          axisX: {
+            title: "Automatically Updates"
+          },
+          axisY:{
+            prefix: '',
+            includeZero: true,
+            maximum: 40,
+            minimum: 0
+          }, 
+          data: [{ 
+            // dataSeries1
+            type: "line",
+            xValueType: "dateTime",
+            showInLegend: true,
+            name: "CLWO Jailbreak",
+            dataPoints: latestData['jb.clwo.eu']
+          },
+          {       
+            // dataSeries2
+            type: "line",
+            xValueType: "dateTime",
+            showInLegend: true,
+            name: "CLWO TTT" ,
+            dataPoints: latestData['ttt.clwo.eu']
+          },
+          {       
+            // dataSeries3
+            type: "line",
+            xValueType: "dateTime",
+            showInLegend: true,
+            name: "CLWO BHOP" ,
+            dataPoints: latestData['bhop.clwo.eu']
+          }],
+              legend:{
+                cursor:"pointer",
+                itemclick : function(e) {
+                  if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                    e.dataSeries.visible = false;
+                  }
+                  else {
+                    e.dataSeries.visible = true;
+                  }
+                  chart.render();
+                }
+              }
+        });
+        chart.render()
+      });
+      socket.on('update data', function(data){
+        for (var i in data) {
+          latestData[i].push({x: new Date(data[i].x), y: data[i].y})
+        }
+        chart.render()
+      });
+    </script>
+  </body>
+</html>
